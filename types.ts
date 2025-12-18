@@ -9,6 +9,9 @@ export interface VideoInfo {
   summary?: string;
   tags?: string[];
   downloadUrl?: string;
+  resolution?: string;
+  duration?: string;
+  fileSize?: string;
 }
 
 export enum Platform {

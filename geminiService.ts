@@ -1,17 +1,25 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
-
 export const analyzeVideoLink = async (url: string) => {
+  // الحصول على المفتاح بأمان
+  const apiKey = (window as any).process?.env?.API_KEY || "";
+  if (!apiKey) throw new Error("API Key is missing");
+  
+  const ai = new GoogleGenAI({ apiKey });
   const model = "gemini-3-flash-preview";
   
   const prompt = `
-    Analyze this video URL: ${url}. 
-    1. Identify the social media platform (TikTok, Instagram, YouTube, Twitter).
-    2. Since you are an AI assistant, provide a mock summary of what this video likely contains based on the URL structure or common trends.
-    3. Provide instructions in Arabic on how to download from this platform without a watermark.
-    4. Return the result in a JSON format.
+    حلل رابط الفيديو التالي: ${url}
+    
+    المطلوب:
+    1. حدد المنصة (TikTok, YouTube, Instagram).
+    2. ابحث عن أفضل طريقة لتحميل هذا الفيديو تحديداً بأعلى جودة (1080p أو 4K) وبدون علامة مائية.
+    3. إذا توفرت روابط "تحميل مباشر" من أدوات معروفة، اذكرها.
+    4. قدم عنواناً احترافياً ووصفاً تقنياً للفيديو.
+    5. استخرج الكلمات المفتاحية (Tags).
+    
+    يجب أن تكون النتيجة بتنسيق JSON حصراً.
   `;
 
   try {
@@ -19,27 +27,30 @@ export const analyzeVideoLink = async (url: string) => {
       model: model,
       contents: prompt,
       config: {
+        tools: [{ googleSearch: {} }], // استخدام البحث للعثور على أفضل روابط التحميل
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
             platform: { type: Type.STRING },
-            suggestedTitle: { type: Type.STRING },
+            title: { type: Type.STRING },
             summary: { type: Type.STRING },
-            instructions: { type: Type.STRING },
-            tags: { 
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            }
+            bestQuality: { type: Type.STRING },
+            downloadInstructions: { type: Type.STRING },
+            tags: { type: Type.ARRAY, items: { type: Type.STRING } },
+            suggestedFileName: { type: Type.STRING }
           },
-          required: ["platform", "suggestedTitle", "summary", "instructions"]
+          required: ["platform", "title", "summary", "downloadInstructions"]
         }
       }
     });
 
-    return JSON.parse(response.text);
+    const data = JSON.parse(response.text);
+    // استخراج الروابط المرجعية إذا وجدت
+    const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    return { ...data, sources };
   } catch (error) {
-    console.error("Gemini Analysis Error:", error);
+    console.error("Analysis Error:", error);
     throw error;
   }
 };
