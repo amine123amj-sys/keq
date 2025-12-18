@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>فيديو ماستر PRO - تحميل بذكاء</title>
     <script>
-      // حماية لمنع الشاشة الزرقاء بسبب process.env
+      // حماية لمنع الشاشة الزرقاء (انهيار JS) بسبب البيئة
       window.process = window.process || { env: { API_KEY: "" } };
+      window.global = window;
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -41,20 +42,32 @@
       }
     </style>
     <script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3",
-    "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
-  }
-}
-</script>
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom": "https://esm.sh/react-dom@^19.2.3",
+        "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+      }
+    }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="index.tsx"></script>
+    <div id="root">
+      <!-- حالة تحميل مؤقتة تظهر في حال تأخر تحميل JS -->
+      <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #020617;">
+        <div style="text-align: center;">
+          <div style="width: 50px; height: 50px; border: 5px solid #1e293b; border-top-color: #38bdf8; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+          <p style="color: #64748b; font-family: sans-serif;">جاري تشغيل محرك فيديو ماستر...</p>
+        </div>
+      </div>
+    </div>
+    <style>
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <!-- استخدام مسار نسبي لضمان التحميل من المجلد الفرعي على GitHub Pages -->
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>

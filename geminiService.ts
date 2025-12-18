@@ -2,32 +2,36 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const analyzeVideoLink = async (url: string) => {
-  // الحصول على المفتاح بأمان
+  // جلب المفتاح مع فحص الأمان
   const apiKey = (window as any).process?.env?.API_KEY || "";
-  if (!apiKey) throw new Error("API Key is missing");
+  
+  if (!apiKey || apiKey === "") {
+    throw new Error("API Key is missing or invalid. Please ensure it's set in the environment.");
+  }
   
   const ai = new GoogleGenAI({ apiKey });
-  const model = "gemini-3-flash-preview";
+  // استخدام موديل Pro لتحليل أعمق لروابط يوتيوب وتيك توك
+  const modelName = "gemini-3-pro-preview";
   
   const prompt = `
-    حلل رابط الفيديو التالي: ${url}
+    أنت خبير في معالجة روابط الفيديو. حلل الرابط: ${url}
     
-    المطلوب:
-    1. حدد المنصة (TikTok, YouTube, Instagram).
-    2. ابحث عن أفضل طريقة لتحميل هذا الفيديو تحديداً بأعلى جودة (1080p أو 4K) وبدون علامة مائية.
-    3. إذا توفرت روابط "تحميل مباشر" من أدوات معروفة، اذكرها.
-    4. قدم عنواناً احترافياً ووصفاً تقنياً للفيديو.
-    5. استخرج الكلمات المفتاحية (Tags).
+    المطلوب بدقة:
+    1. ما هي المنصة؟ (TikTok, YouTube, Instagram).
+    2. ابحث عن الطريقة الأحدث والآمنة لتحميل هذا الفيديو بجودة 4K أو 1080p بدون علامة مائية.
+    3. إذا كان الرابط يوتيوب، اقترح أفضل جودة متاحة.
+    4. قدم تقريراً تقنياً مختصراً عن محتوى الفيديو (عنوان، وصف، تاغات).
+    5. أعطِ رابطاً مباشراً أو أداة مساعدة إذا كانت متاحة في سياق البحث.
     
-    يجب أن تكون النتيجة بتنسيق JSON حصراً.
+    الرد يجب أن يكون JSON فقط.
   `;
 
   try {
     const response = await ai.models.generateContent({
-      model: model,
+      model: modelName,
       contents: prompt,
       config: {
-        tools: [{ googleSearch: {} }], // استخدام البحث للعثور على أفضل روابط التحميل
+        tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -45,12 +49,14 @@ export const analyzeVideoLink = async (url: string) => {
       }
     });
 
-    const data = JSON.parse(response.text);
-    // استخراج الروابط المرجعية إذا وجدت
+    const textOutput = response.text;
+    if (!textOutput) throw new Error("Empty response from Gemini");
+    
+    const data = JSON.parse(textOutput);
     const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     return { ...data, sources };
   } catch (error) {
-    console.error("Analysis Error:", error);
+    console.error("Gemini Service Detailed Error:", error);
     throw error;
   }
 };
