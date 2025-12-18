@@ -2,28 +2,26 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const analyzeVideoLink = async (url: string) => {
-  // جلب المفتاح مع فحص الأمان
-  const apiKey = (window as any).process?.env?.API_KEY || "";
+  const apiKey = process.env.API_KEY || "";
   
-  if (!apiKey || apiKey === "") {
-    throw new Error("API Key is missing or invalid. Please ensure it's set in the environment.");
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please check your environment configuration.");
   }
   
   const ai = new GoogleGenAI({ apiKey });
-  // استخدام موديل Pro لتحليل أعمق لروابط يوتيوب وتيك توك
   const modelName = "gemini-3-pro-preview";
   
   const prompt = `
-    أنت خبير في معالجة روابط الفيديو. حلل الرابط: ${url}
+    تحليل احترافي لرابط الفيديو: ${url}
     
-    المطلوب بدقة:
-    1. ما هي المنصة؟ (TikTok, YouTube, Instagram).
-    2. ابحث عن الطريقة الأحدث والآمنة لتحميل هذا الفيديو بجودة 4K أو 1080p بدون علامة مائية.
-    3. إذا كان الرابط يوتيوب، اقترح أفضل جودة متاحة.
-    4. قدم تقريراً تقنياً مختصراً عن محتوى الفيديو (عنوان، وصف، تاغات).
-    5. أعطِ رابطاً مباشراً أو أداة مساعدة إذا كانت متاحة في سياق البحث.
+    المهام:
+    1. حدد المنصة (TikTok, Instagram, YouTube, etc.)
+    2. ابحث عن أحدث طريقة لتحميل هذا المقطع خصيصاً "بدون علامة مائية" وبأعلى جودة (1080p/4K).
+    3. إذا كان المقطع من إنستغرام (Reels/Video)، ابحث عن روابط توفر التحميل المباشر.
+    4. لخص محتوى الفيديو في جملة جذابة.
+    5. اقترح وسوماً (Tags) مناسبة لزيادة الانتشار.
     
-    الرد يجب أن يكون JSON فقط.
+    يجب أن يكون الرد بتنسيق JSON حصراً.
   `;
 
   try {
@@ -42,21 +40,18 @@ export const analyzeVideoLink = async (url: string) => {
             bestQuality: { type: Type.STRING },
             downloadInstructions: { type: Type.STRING },
             tags: { type: Type.ARRAY, items: { type: Type.STRING } },
-            suggestedFileName: { type: Type.STRING }
+            downloadLink: { type: Type.STRING, description: "Direct download link if found" }
           },
           required: ["platform", "title", "summary", "downloadInstructions"]
         }
       }
     });
 
-    const textOutput = response.text;
-    if (!textOutput) throw new Error("Empty response from Gemini");
-    
-    const data = JSON.parse(textOutput);
+    const result = JSON.parse(response.text);
     const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    return { ...data, sources };
+    return { ...result, sources };
   } catch (error) {
-    console.error("Gemini Service Detailed Error:", error);
+    console.error("Analysis Error:", error);
     throw error;
   }
 };

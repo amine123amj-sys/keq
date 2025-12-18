@@ -4,36 +4,75 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>فيديو ماستر PRO - تحميل بذكاء</title>
+    <title>فيديو ماستر PRO | IS_ME_UNNI</title>
     <script>
-      // حماية البيئة لضمان عمل React و Gemini SDK في المتصفح
       window.process = { env: { API_KEY: "" } };
       window.global = window;
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --primary: #0ea5e9;
+        --secondary: #6366f1;
+        --accent: #a855f7;
+        --bg: #020617;
+      }
       body {
         font-family: 'Cairo', sans-serif;
-        background: #020617;
+        background-color: var(--bg);
         color: #f8fafc;
         margin: 0;
         overflow-x: hidden;
       }
-      .glass {
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+      .font-outfit { font-family: 'Outfit', sans-serif; }
+      
+      .mesh-bg {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        z-index: -1;
+        background: 
+          radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
       }
+
+      .glass {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      
       .gradient-text {
         background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
-      ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: #020617; }
-      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.4);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px -5px rgba(14, 165, 233, 0.6);
+      }
+
+      .card-video {
+        transition: all 0.4s ease;
+      }
+      .card-video:hover {
+        transform: translateY(-5px);
+        border-color: rgba(56, 189, 248, 0.3);
+      }
+
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-slide-up { animation: slideUp 0.6s ease forwards; }
     </style>
     <script type="importmap">
 {
@@ -49,8 +88,8 @@
 </script>
   </head>
   <body>
+    <div class="mesh-bg"></div>
     <div id="root"></div>
-    <!-- استخدام ./ لضمان التحميل من نفس مجلد المشروع على GitHub Pages -->
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>
