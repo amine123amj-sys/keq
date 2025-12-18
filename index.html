@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>فيديو ماستر PRO - تحميل بذكاء</title>
     <script>
-      // حماية فورية لمنع انهيار React قبل التحميل
+      // حماية البيئة لضمان عمل React و Gemini SDK في المتصفح
       window.process = { env: { API_KEY: "" } };
       window.global = window;
     </script>
@@ -19,6 +19,7 @@
         background: #020617;
         color: #f8fafc;
         margin: 0;
+        overflow-x: hidden;
       }
       .glass {
         background: rgba(15, 23, 42, 0.8);
@@ -30,6 +31,9 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #020617; }
+      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
     <script type="importmap">
 {
@@ -46,7 +50,7 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- تحميل السكريبت الأساسي بدون بادئة ./ لضمان التوافق العالمي -->
-    <script type="module" src="index.tsx"></script>
+    <!-- استخدام ./ لضمان التحميل من نفس مجلد المشروع على GitHub Pages -->
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>
