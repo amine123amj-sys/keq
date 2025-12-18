@@ -1,255 +1,154 @@
 
-import React, { useState, useEffect } from 'react';
-import { VideoInfo, Platform } from './types';
+import React, { useState, useEffect, useCallback } from 'react';
 import { analyzeVideoLink } from './geminiService';
 
 const App: React.FC = () => {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isAppLoading, setIsAppLoading] = useState(true);
-  const [videos, setVideos] = useState<VideoInfo[]>([]);
+  const [processStep, setProcessStep] = useState('');
+  const [videos, setVideos] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedQuality, setSelectedQuality] = useState('1080p');
 
-  // محاكاة تشغيل المحرك عند بداية التحميل
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsAppLoading(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
+  const steps = [
+    "جاري التحليل...",
+    "فك التشفير...",
+    "تجهيز الجودة العالية...",
+    "توليد الرابط..."
+  ];
 
-  const handleDownload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!url.trim()) return;
-
+  // دالة المعالجة الرئيسية
+  const handleProcess = useCallback(async (targetUrl: string) => {
+    if (!targetUrl.trim()) return;
     setIsLoading(true);
     setError(null);
-
     try {
-      const analysis = await analyzeVideoLink(url);
-      
-      const newVideo: VideoInfo = {
-        id: Math.random().toString(36).substr(2, 9),
-        url: url,
-        title: analysis.suggestedTitle || "فيديو جديد",
-        platform: analysis.platform || Platform.UNKNOWN,
-        thumbnail: `https://picsum.photos/seed/${Math.random()}/400/225`,
-        status: 'ready',
-        summary: analysis.summary,
-        tags: analysis.tags,
-        downloadUrl: "#",
+      const result = await analyzeVideoLink(targetUrl);
+      const newVideo = {
+        id: Date.now().toString(),
+        url: targetUrl,
+        ...result,
+        thumbnail: `https://picsum.photos/seed/${Math.random()}/600/400`,
+        timestamp: new Date().toLocaleTimeString('ar-EG'),
+        selectedQuality
       };
-
       setVideos(prev => [newVideo, ...prev]);
       setUrl('');
-    } catch (err) {
-      setError("عذراً، حدث خطأ أثناء تحليل الرابط. تأكد من صحة الرابط وحاول مرة أخرى.");
+    } catch (err: any) {
+      setError("الرابط غير مدعوم حالياً أو حدث خطأ في الاتصال.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedQuality]);
 
-  const removeVideo = (id: string) => {
-    setVideos(prev => prev.filter(v => v.id !== id));
-  };
+  // التحقق من وجود رابط في الـ URL عند تحميل الصفحة (للمشاركة)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedUrl = params.get('url') || params.get('v');
+    if (sharedUrl) {
+      setUrl(sharedUrl);
+      handleProcess(sharedUrl);
+    }
+  }, [handleProcess]);
 
-  if (isAppLoading) {
-    return (
-      <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-6 text-center">
-        <div className="relative mb-8">
-          <div className="w-24 h-24 bg-sky-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-sky-500/40 animate-bounce">
-            <i className="fas fa-play text-white text-4xl"></i>
-          </div>
-          <div className="absolute -inset-4 bg-sky-500/20 blur-xl rounded-full animate-pulse"></div>
-        </div>
-        <h1 className="text-3xl font-bold gradient-text mb-4">فيديو ماستر</h1>
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-slate-400 text-lg animate-pulse">جاري تشغيل محرك فيديو ماستر الذكي...</p>
-          <div className="w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-sky-500 animate-[loading_2s_ease-in-out_infinite]" style={{ width: '100%', transformOrigin: 'right' }}></div>
-          </div>
-        </div>
-        <style>{`
-          @keyframes loading {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-          }
-        `}</style>
-      </div>
-    );
-  }
+  useEffect(() => {
+    let interval: any;
+    if (isLoading) {
+      let i = 0;
+      setProcessStep(steps[0]);
+      interval = setInterval(() => {
+        i = (i + 1) % steps.length;
+        setProcessStep(steps[i]);
+      }, 1500);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200 animate-in fade-in duration-1000">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 glass px-6 py-4 flex justify-between items-center mb-8 shadow-xl">
+    <div className="min-h-screen flex flex-col bg-[#020617]">
+      <header className="glass sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-sky-500 rounded-lg flex items-center justify-center shadow-lg shadow-sky-500/20">
-            <i className="fas fa-play text-white text-xl"></i>
+          <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-xl flex items-center justify-center">
+            <i className="fas fa-bolt text-white text-lg"></i>
           </div>
-          <h1 className="text-2xl font-bold gradient-text">فيديو ماستر</h1>
+          <h1 className="text-xl font-black gradient-text">VIDEO PRO</h1>
         </div>
-        <div className="hidden md:flex gap-6 text-sm font-medium">
-          <a href="#" className="hover:text-sky-400 transition-colors">الرئيسية</a>
-          <a href="#" className="hover:text-sky-400 transition-colors">عن التطبيق</a>
-          <a href="#" className="hover:text-sky-400 transition-colors">الدعم الفني</a>
+        <div className="flex gap-2">
+          {['1080p', '4K'].map(q => (
+            <button
+              key={q}
+              onClick={() => setSelectedQuality(q)}
+              className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${
+                selectedQuality === q ? 'bg-sky-500 text-white' : 'bg-white/5 text-slate-400'
+              }`}
+            >
+              {q}
+            </button>
+          ))}
         </div>
-      </nav>
+      </header>
 
-      <main className="max-w-5xl mx-auto px-6 pb-20">
-        {/* Hero Section */}
+      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12">
         <section className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-white">تحميل الفيديوهات بذكاء</h2>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
-            قم بنسخ الرابط من تيك توك، إنستقرام أو يوتيوب، وسيقوم نظامنا المدعوم بالذكاء الاصطناعي بتحليل الفيديو وتجهيزه للتحميل بدون علامة مائية.
-          </p>
-        </section>
-
-        {/* Input Section */}
-        <section className="glass rounded-3xl p-6 md:p-8 mb-12 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 blur-[100px] -z-10"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 blur-[100px] -z-10"></div>
+          <h2 className="text-4xl md:text-5xl font-black mb-4 text-white">تحميل ذكي بدون علامة</h2>
+          <p className="text-slate-500 text-sm mb-8">يدعم TikTok, YouTube, Instagram بجودة فائقة</p>
           
-          <form onSubmit={handleDownload} className="relative">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="ضع رابط الفيديو هنا (تيك توك، إنستقرام...)"
-                  className="w-full bg-slate-900/50 border border-slate-700 rounded-2xl py-4 px-12 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all text-lg placeholder:text-slate-600"
-                />
-                <i className="fas fa-link absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-              </div>
+          <form onSubmit={(e) => { e.preventDefault(); handleProcess(url); }} className="relative group">
+            <div className="flex flex-col md:flex-row gap-2 p-2 bg-slate-900 border border-white/10 rounded-2xl">
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="ألصق الرابط هنا..."
+                className="flex-1 bg-transparent border-none py-3 px-4 text-white focus:ring-0"
+              />
               <button
                 type="submit"
                 disabled={isLoading || !url}
-                className={`px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg ${
-                  isLoading 
-                    ? 'bg-slate-700 cursor-not-allowed text-slate-400' 
-                    : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20 active:scale-95'
-                }`}
+                className="bg-sky-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-sky-400 disabled:opacity-50"
               >
-                {isLoading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin"></i>
-                    جاري التحليل...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-magic"></i>
-                    تحميل الآن
-                  </>
-                )}
+                {isLoading ? <i className="fas fa-spinner fa-spin"></i> : 'تحميل'}
               </button>
             </div>
           </form>
 
-          {error && (
-            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
-              <i className="fas fa-exclamation-circle"></i>
-              {error}
-            </div>
-          )}
+          {isLoading && <p className="mt-4 text-sky-400 font-bold animate-pulse text-xs">{processStep}</p>}
+          {error && <p className="mt-4 text-red-500 text-xs font-bold">{error}</p>}
         </section>
 
-        {/* Features/Guides */}
-        {!videos.length && !isLoading && (
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {[
-              { icon: 'fa-bolt', title: 'سرعة فائقة', desc: 'تحميل ومعالجة الفيديوهات في ثوانٍ معدودة بجودة عالية.' },
-              { icon: 'fa-shield-halved', title: 'بدون علامة مائية', desc: 'نضمن لك الحصول على الفيديو بجودته الأصلية وبدون أي شعارات مزعجة.' },
-              { icon: 'fa-robot', title: 'ذكاء اصطناعي', desc: 'تلخيص ذكي للمحتوى واستخراج الكلمات المفتاحية تلقائياً.' }
-            ].map((f, i) => (
-              <div key={i} className="glass p-6 rounded-2xl hover:bg-slate-800/50 transition-colors group border-b-2 border-transparent hover:border-sky-500">
-                <i className={`fas ${f.icon} text-3xl text-sky-400 mb-4 group-hover:scale-110 transition-transform`}></i>
-                <h3 className="text-xl font-bold mb-2 text-white">{f.title}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
+        <div className="grid gap-6">
+          {videos.map((v) => (
+            <div key={v.id} className="glass rounded-3xl overflow-hidden border border-white/5 flex flex-col md:flex-row animate-in fade-in zoom-in duration-300">
+              <div className="md:w-64 h-40 md:h-auto overflow-hidden">
+                <img src={v.thumbnail} className="w-full h-full object-cover" />
               </div>
-            ))}
-          </section>
-        )}
-
-        {/* Results Section */}
-        <section className="space-y-6">
-          {videos.map((video) => (
-            <div key={video.id} className="glass rounded-3xl p-6 flex flex-col md:flex-row gap-6 animate-in slide-in-from-bottom-4 duration-500 shadow-xl overflow-hidden group">
-              <div className="w-full md:w-72 h-48 rounded-2xl overflow-hidden relative shadow-inner flex-shrink-0">
-                <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-sky-400 flex items-center gap-1">
-                  <i className={`fab fa-${video.platform.toLowerCase()}`}></i>
-                  {video.platform}
+              <div className="flex-1 p-6">
+                <div className="flex justify-between mb-2">
+                  <h3 className="font-bold text-white text-lg line-clamp-1">{v.title}</h3>
+                  <span className="text-sky-500 text-[10px] font-black">{v.platform}</span>
                 </div>
-              </div>
-
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-white line-clamp-1">{video.title}</h3>
-                    <button 
-                      onClick={() => removeVideo(video.id)}
-                      className="text-slate-500 hover:text-red-400 transition-colors p-1"
-                    >
-                      <i className="fas fa-trash-alt"></i>
-                    </button>
-                  </div>
-                  
-                  {video.summary && (
-                    <div className="bg-slate-900/50 p-4 rounded-2xl mb-4 border border-slate-800/50">
-                      <p className="text-sm text-slate-300 leading-relaxed">
-                        <span className="text-sky-400 font-bold block mb-1">🤖 ملخص ذكي:</span>
-                        {video.summary}
-                      </p>
-                    </div>
+                <p className="text-slate-500 text-xs mb-4 line-clamp-2">{v.summary}</p>
+                <div className="bg-white/5 p-3 rounded-xl mb-4 text-[11px] text-slate-300">
+                  <i className="fas fa-info-circle ml-2 text-sky-500"></i> {v.downloadInstructions}
+                </div>
+                <div className="flex gap-2">
+                  <button className="flex-1 bg-white text-black font-black py-3 rounded-xl text-sm hover:bg-sky-500 hover:text-white transition-all">
+                    تنزيل الملف
+                  </button>
+                  {v.sources?.length > 0 && (
+                    <a href={v.sources[0]?.web?.uri} target="_blank" className="p-3 bg-white/5 rounded-xl text-white">
+                      <i className="fas fa-external-link-alt"></i>
+                    </a>
                   )}
-
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {video.tags?.map((tag, idx) => (
-                      <span key={idx} className="bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-xs font-medium">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button className="flex-1 bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 active:scale-95 transition-all">
-                    <i className="fas fa-download"></i>
-                    تحميل بدون علامة مائية
-                  </button>
-                  <button className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
-                    <i className="fas fa-copy"></i>
-                    نسخ الرابط المباشر
-                  </button>
                 </div>
               </div>
             </div>
           ))}
-        </section>
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="glass py-12 mt-20 border-t border-slate-800">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-8 h-8 bg-sky-500 rounded flex items-center justify-center">
-              <i className="fas fa-play text-white"></i>
-            </div>
-            <span className="text-xl font-bold gradient-text">فيديو ماستر</span>
-          </div>
-          <p className="text-slate-500 text-sm max-w-md mx-auto mb-8 leading-relaxed">
-            تطبيق فيديو ماستر هو أداة متطورة لتحليل المحتوى المرئي وتحميله بسهولة. نحن نلتزم بتوفير أفضل تجربة مستخدم ممكنة مع احترام حقوق الملكية.
-          </p>
-          <div className="flex justify-center gap-6 text-slate-400 text-2xl">
-            <a href="#" className="hover:text-sky-400 transition-colors"><i className="fab fa-github"></i></a>
-            <a href="#" className="hover:text-sky-400 transition-colors"><i className="fab fa-twitter"></i></a>
-            <a href="#" className="hover:text-sky-400 transition-colors"><i className="fab fa-instagram"></i></a>
-          </div>
-          <div className="mt-8 pt-8 border-t border-slate-800/50 text-slate-600 text-xs font-medium uppercase tracking-widest">
-            © {new Date().getFullYear()} فيديو ماستر الذكي • صُنع بحب
-          </div>
-        </div>
+      <footer className="py-8 text-center border-t border-white/5">
+        <p className="text-slate-600 text-[10px]">نظام التحميل المتقدم v2.1 • 2024</p>
       </footer>
     </div>
   );
