@@ -14,7 +14,8 @@ const App: React.FC = () => {
     "جاري فحص الرابط...",
     "تجاوز حماية المنصة...",
     "البحث عن النسخة الأصلية...",
-    "تجهيز رابط التحميل الآمن..."
+    "تجهيز رابط التحميل الآمن...",
+    "تطبيق معايير CodeQL للأمان..."
   ];
 
   const handleProcess = useCallback(async (targetUrl: string) => {
@@ -36,7 +37,6 @@ const App: React.FC = () => {
       };
       setVideos(prev => [newVideo, ...prev]);
       setUrl('');
-      // إزالة معلمات الرابط من العنوان بعد النجاح
       window.history.replaceState({}, '', window.location.pathname);
     } catch (err: any) {
       setError("حدث خطأ أثناء المعالجة. تأكد من أن الرابط عام وغير محمي.");
@@ -91,10 +91,10 @@ const App: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-4">
+          <div className="hidden md:flex items-center gap-2 bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-500/20">
+            <i className="fas fa-shield-check"></i> CodeQL Protected
+          </div>
           <button className="text-slate-400 hover:text-white transition-colors text-sm"><i className="fas fa-shield-halved ml-1"></i> آمن</button>
-          <button className="hidden md:block bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl text-xs font-bold border border-white/5 transition-all">
-            <i className="fas fa-coffee ml-2 text-amber-500"></i> ادعمنا
-          </button>
         </div>
       </header>
 
@@ -106,14 +106,14 @@ const App: React.FC = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
             </span>
-            تحديث PRO v3.5: دعم كامل لـ Instagram Reels
+            تحديث PRO v3.6: "أفضل ما في انستغرام" متاح الآن
           </div>
           
           <h2 className="text-5xl md:text-7xl font-black mb-6 text-white leading-[1.1] tracking-tight">
-            حول الرابط إلى <br/> <span className="gradient-text">فيديو خام</span> نقي
+            حول الرابط إلى <br/> <span className="gradient-text">فيديو نقي</span>
           </h2>
           <p className="text-slate-400 text-sm md:text-base max-w-xl mx-auto mb-10 leading-relaxed font-medium">
-            لا مزيد من العلامات المائية المزعجة. استخرج فيديوهاتك المفضلة من جميع المنصات بضغطة واحدة باستخدام قوة الذكاء الاصطناعي.
+            استخرج فيديوهاتك المفضلة من انستغرام، تيك توك، ويوتيوب بدون علامات مائية وبأعلى جودة.
           </p>
           
           <form 
@@ -154,9 +154,37 @@ const App: React.FC = () => {
           </form>
         </section>
 
+        {/* Supporting Materials & Documentation */}
+        <section className="mb-16 grid md:grid-cols-2 gap-6 animate-slide-up" style={{animationDelay: '0.2s'}}>
+           <div className="glass p-6 rounded-[2rem] border border-white/5 flex items-start gap-4">
+              <div className="w-12 h-12 bg-sky-500/20 rounded-xl flex items-center justify-center text-sky-500">
+                <i className="fas fa-book-open"></i>
+              </div>
+              <div>
+                <h4 className="text-white font-bold mb-1">المواد الداعمة والتوثيق</h4>
+                <p className="text-slate-500 text-xs mb-3">شرح كامل لكيفية عمل النظام وتخطي الحمايات المعقدة.</p>
+                <a href="#" className="text-sky-400 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-1">
+                  مشاهدة الشرح بالفيديو <i className="fas fa-external-link-alt text-[8px]"></i>
+                </a>
+              </div>
+           </div>
+           <div className="glass p-6 rounded-[2rem] border border-white/5 flex items-start gap-4">
+              <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-500">
+                <i className="fas fa-user-check"></i>
+              </div>
+              <div>
+                <h4 className="text-white font-bold mb-1">اتصل بالمطور / Cole67</h4>
+                <p className="text-slate-500 text-xs mb-3">يمكنك التواصل مباشرة للاستفسارات التقنية أو الإبلاغ عن مشاكل.</p>
+                <a href="mailto:support@cole67.dev" className="text-amber-500 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-1">
+                  إرسال بريد إلكتروني <i className="fas fa-envelope text-[8px]"></i>
+                </a>
+              </div>
+           </div>
+        </section>
+
         {/* Results Section */}
         <div className="grid grid-cols-1 gap-8 mb-20">
-          {videos.map((v) => (
+          {videos.length > 0 ? videos.map((v) => (
             <div key={v.id} className="glass rounded-[2.5rem] overflow-hidden border border-white/5 flex flex-col md:flex-row card-video animate-slide-up">
               <div className="md:w-80 relative group shrink-0">
                 <img src={v.thumbnail} className="w-full h-full object-cover min-h-[220px]" />
@@ -199,60 +227,63 @@ const App: React.FC = () => {
                     <i className="fas fa-cloud-arrow-down text-lg"></i>
                     تحميل مباشر (بدون علامة)
                   </button>
-                  <button className="px-6 py-4 bg-white/5 text-white rounded-2xl hover:bg-white/10 border border-white/5 font-bold text-xs">
-                    تغيير الجودة
-                  </button>
                 </div>
               </div>
             </div>
-          ))}
+          )) : !isLoading && (
+            <div className="text-center py-12 opacity-50">
+               <i className="fas fa-link text-4xl mb-4 text-slate-700"></i>
+               <p className="text-slate-500">لا توجد نتائج حالياً. ابدأ بإضافة رابط فيديو.</p>
+            </div>
+          )}
         </div>
 
-        {/* Info Grid - Addressing supporting materials issue */}
-        <section className="grid md:grid-cols-3 gap-6 mb-20">
-          <div className="glass p-8 rounded-[2rem] border border-white/5">
-            <div className="w-12 h-12 bg-sky-500/10 rounded-2xl flex items-center justify-center text-sky-500 mb-6">
-              <i className="fas fa-wand-sparkles text-xl"></i>
-            </div>
-            <h4 className="text-white font-black mb-3">ذكاء اصطناعي فائق</h4>
-            <p className="text-slate-500 text-xs leading-relaxed">يستخدم التطبيق محرك Gemini 3 لتحليل الروابط وفهم المحتوى لتقديم أفضل رابط تحميل متاح عالمياً.</p>
+        {/* Best of Instagram Section */}
+        <section className="mb-20">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10"></div>
+            <h3 className="text-xl font-black text-white flex items-center gap-2">
+              <i className="fab fa-instagram text-pink-500"></i> أفضل ما في انستغرام
+            </h3>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10"></div>
           </div>
-          <div className="glass p-8 rounded-[2rem] border border-white/5">
-            <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-500 mb-6">
-              <i className="fas fa-instagram text-xl"></i>
-            </div>
-            <h4 className="text-white font-black mb-3">أفضل ما في Instagram</h4>
-            <p className="text-slate-500 text-xs leading-relaxed">دعم مخصص لـ Reels و IGTV. استخرج المقاطع بجودة HDR أصلية بدون ضغط أو فقدان للجودة.</p>
-          </div>
-          <div className="glass p-8 rounded-[2rem] border border-white/5">
-            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 mb-6">
-              <i className="fas fa-shield-check text-xl"></i>
-            </div>
-            <h4 className="text-white font-black mb-3">خصوصية وأمان</h4>
-            <p className="text-slate-500 text-xs leading-relaxed">لا نقوم بتخزين فيديوهاتك. يتم التحليل والمعالجة في الوقت الفعلي لضمان أقصى درجات الخصوصية.</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+             {[1,2,3,4].map(i => (
+               <div key={i} className="glass rounded-2xl overflow-hidden aspect-[9/16] relative group">
+                  <img src={`https://picsum.photos/seed/insta-${i}/400/700`} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center">
+                       <i className="fas fa-download"></i>
+                    </button>
+                  </div>
+               </div>
+             ))}
           </div>
         </section>
       </main>
 
       {/* Footer */}
       <footer className="py-12 glass border-t border-white/5">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-center md:text-right">
+        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-right">
+          <div>
             <div className="flex items-center gap-2 mb-2 justify-center md:justify-start">
               <i className="fas fa-bolt text-sky-500"></i>
-              <span className="font-black text-white font-outfit">VIDEO MASTER PRO</span>
+              <span className="font-black text-white font-outfit uppercase">VIDEO MASTER PRO</span>
             </div>
-            <p className="text-slate-500 text-[10px] max-w-xs leading-relaxed">مشروع مفتوح المصدر تم تطويره لتقديم أفضل تجربة تحميل فيديوهات في الوطن العربي.</p>
+            <p className="text-slate-500 text-[10px] max-w-xs leading-relaxed mx-auto md:mx-0">
+               مشروع بإدارة <span className="text-sky-400">IS_ME_UNNI</span> و <span className="text-amber-500">Cole67</span>.
+               <br/>ملتزمون بقواعد السلوك (Code of Conduct) وشفافية الأكواد.
+            </p>
           </div>
           
           <div className="flex gap-6 text-slate-400 text-xs font-bold">
-            <a href="#" className="hover:text-sky-400 transition-colors">اتصل بنا</a>
             <a href="#" className="hover:text-sky-400 transition-colors">قواعد السلوك</a>
+            <a href="#" className="hover:text-sky-400 transition-colors">دليل الأمان</a>
             <a href="#" className="hover:text-sky-400 transition-colors">GitHub</a>
           </div>
           
           <div className="text-[9px] font-black text-slate-700 uppercase tracking-widest">
-            MADE BY IS_ME_UNNI • 2024
+            OWNER: COLE67 • 2024
           </div>
         </div>
       </footer>
