@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { analyzeVideoLink } from './geminiService';
+import './firebaseConfig'; // تهيئة Firebase
 
 const App: React.FC = () => {
   const [url, setUrl] = useState('');
